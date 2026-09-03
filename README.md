@@ -65,14 +65,14 @@ included in the repository.
 
 The implementation is written in Python and uses TensorFlow/Keras, SHAP,
 NumPy, pandas, scikit-learn, matplotlib, openpyxl and pyarrow. Python versions
-from 3.9 through 3.13 are suitable within the declared project range.
+from 3.9 through 3.13 are suitable within the declared project range. The
+experiments were run using `pip` version `26.2.1`.
 
 Create an environment and install the dependencies:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
