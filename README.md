@@ -152,7 +152,7 @@ python 04_ablation_background.py
 - `data/df_val.xlsx`, used to select the global regularisation parameter.
 
 
-### Step 2: select the stability weight
+### Step 2: select the instability weight
 
 For each validation subject $(x,y)$, `02_select_lambda.py` constructs an
 age-matched background for every candidate half-width $\delta$:
@@ -165,8 +165,8 @@ Here, the **window** is the age interval $[y-\delta,y+\delta]$ around the
 subject's chronological age. The candidate half-widths are
 `[2, 3, 5, 7, 10, 15, 20]` years. For each window, the script runs 10 bootstrap
 KernelSHAP computations and estimates the calibration gap and attribution
-stability. The calibration term measures how close the SHAP baseline
-$\phi_0$ is to the subject's age, $|\phi_0-y|$, while stability is the mean
+instability. The calibration term measures how close the SHAP baseline
+$\phi_0$ is to the subject's age, $|\phi_0-y|$, while instability is the mean
 per-feature standard deviation across bootstrap attributions.
 
 For a candidate trade-off weight $\lambda$, the window selected for each
@@ -177,7 +177,7 @@ $$
 \left[|\phi_0(B_y^\delta)-y| + \lambda\,s(x;B_y^\delta)\right],
 $$
 
-where $\Delta=\{2,3,5,7,10,15,20\}$ and $s$ denotes stability. The
+where $\Delta=\{2,3,5,7,10,15,20\}$ and $s$ denotes instability. The
 **lambda** parameter controls the calibration--stability trade-off: small
 values favour a better-calibrated baseline, whereas large values favour more
 stable explanations. Since both terms are measured in years, $\lambda$ is
@@ -186,7 +186,7 @@ subjects in the test set.
 
 The script evaluates the candidate values
 `[0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0, 5.0, 10.0]`. For each
-candidate, it aggregates the calibration and stability obtained after the
+candidate, it aggregates the calibration and instability obtained after the
 subject-specific window selection, producing one point on the
 calibration-stability frontier. **lambda_star** ($\lambda^*$) is the single
 global value selected as the point closest to the origin after normalising the
