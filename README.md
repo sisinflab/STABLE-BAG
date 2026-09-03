@@ -169,7 +169,7 @@ instability. The calibration term measures how close the SHAP baseline
 $\phi_0$ is to the subject's age, $|\phi_0-y|$, while instability is the mean
 per-feature standard deviation across bootstrap attributions.
 
-For a candidate trade-off weight $\lambda$, the window selected for each
+For a candidate trade-off weight $ \lambda $, the window selected for each
 subject is the one minimising:
 
 $$
@@ -180,7 +180,7 @@ $$
 where $\Delta=\{2,3,5,7,10,15,20\}$ and $s$ denotes instability. The
 **lambda** parameter controls the calibration--stability trade-off: small
 values favour a better-calibrated baseline, whereas large values favour more
-stable explanations. Since both terms are measured in years, $\lambda$ is
+stable explanations. Since both terms are measured in years, $ \lambda $ is
 dimensionless. It is a cohort-level parameter and is not changed between
 subjects in the test set.
 
@@ -188,10 +188,10 @@ The script evaluates the candidate values
 `[0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0, 5.0, 10.0]`. For each
 candidate, it aggregates the calibration and instability obtained after the
 subject-specific window selection, producing one point on the
-calibration-stability frontier. **lambda_star** ($\lambda^*$) is the single
+calibration-stability frontier. **lambda_star** ($ \lambda^* $) is the single
 global value selected as the point closest to the origin after normalising the
 mean calibration and mean instability across the candidate values. The same
-$\lambda^*$ is then fixed and used for every test subject in Step 3.
+$ \lambda^* $ is then fixed and used for every test subject in Step 3.
 
 The script writes `results/pareto_points.csv` and
 `results/lambda_star.json`, and maintains
@@ -199,7 +199,7 @@ The script writes `results/pareto_points.csv` and
 
 ### Step 3: run the test analysis
 
-`03_run_test.py` fixes $\lambda^*$, uses the complete training pool as the
+`03_run_test.py` fixes $ \lambda^* $, uses the complete training pool as the
 background pool, and evaluates the held-out test subjects. Subjects for which
 all candidate windows fail the local-accuracy sanity check are marked as
 `skipped`.
