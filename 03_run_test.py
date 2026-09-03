@@ -1,22 +1,3 @@
-"""
-Final test run with lambda* fixed.
-
-For each test subject:
-    - For each delta in DELTA_GRID, run bootstrap SHAP.
-    - Pick best delta via loss = |phi_0 - y| + lambda_star * instab.
-    - Save all quantities, SHAP values (long format), density, sanity residual.
-
-The background pool is the FULL df_train (no split) - this is phase 1 baseline.
-Phase 2 (UKBB + VAE augmentation) will reuse this script with a different pool.
-
-Outputs
--------
-    results/test_results.csv       : per-subject summary
-    results/test_shap_long.parquet : per-subject SHAP values in long format
-                                     (subject_id, feature, shap_value)
-    results/test_checkpoint.pkl    : checkpoint (resumable)
-"""
-
 import os
 import json
 import pickle

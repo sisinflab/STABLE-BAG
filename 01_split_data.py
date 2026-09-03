@@ -1,13 +1,3 @@
-"""
-Split df_train.xlsx into background pool (80%) + validation (20%).
-Random proportional split with fixed seed. No stratification (by design:
-the skewed age distribution of df_train is the phenomenon under study).
-
-Outputs:
-    data/df_background.xlsx  -> pool for SHAP background extraction
-    data/df_val.xlsx         -> validation set for lambda selection (Pareto)
-"""
-
 import os
 import numpy as np
 import pandas as pd

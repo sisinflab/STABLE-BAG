@@ -1,35 +1,3 @@
-"""
-05_ablation_backgrounds.py — Three-way ablation of background strategies for
-SHAP-based brain age gap decomposition.
-
-For each test subject, this script computes SHAP attributions under two
-alternative background strategies and compares them with STABLE-BAG
-(loaded from results/test_results.csv):
-
-    STABLE-BAG     adaptive age-window of half-width delta, chosen to
-                   minimise |phi_0 - y|; the reference (already computed
-                   in test_results.csv).
-
-    kNN-feature    background = the 10 nearest training subjects in
-                   MinMax-scaled feature space (Euclidean).
-                   Tests whether morphometric similarity transfers to
-                   age proximity.
-
-    kNN-age        background = the 10 nearest training subjects in
-                   chronological age space (|y_train - y_test|).
-                   Tests whether fixing the background SIZE is preferable
-                   to fixing the calibration CRITERION.
-
-Each strategy yields a base value phi_0 and a SHAP vector for every test
-subject; the calibration |phi_0 - y| is the bottom-line metric.
-
-Outputs in RESULTS_DIR:
-    ablation_backgrounds.csv              per-subject statistics
-    figures/fig_ablation_calibration.png  3-way calibration comparison
-    figures/fig_ablation_diagonality.png  NN-age vs y, both kNN variants
-    figures/fig_ablation_age_range.png    age spread of selected peers
-"""
-
 import os
 import numpy as np
 import pandas as pd
