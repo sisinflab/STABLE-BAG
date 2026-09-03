@@ -23,6 +23,7 @@ STABLE-BAG constructs a subject-specific SHAP background from age-matched peers
 and selects the age window that balances baseline calibration against
 attribution stability. For a subject with chronological age $y$ and predicted
 age $f(x)$, the brain age gap is:
+
 $$
 BAG = f(x) - y.
 $$
