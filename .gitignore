@@ -1,0 +1,12 @@
+.original_data/
+__pycache__/
+.DS_Store/
+.storage/
+results/
+.vscode/
+.misc/
+.venv/
+BAP/
+
+temp.ipynb
+temp.py

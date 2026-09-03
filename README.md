@@ -1,0 +1,264 @@
+# STABLE-BAG: a Stability-Aware Framework for SHAP-based Brain Age Gap Decomposition
+
+This repository contains the code and data required to reproduce the
+experiments described in *"STABLE-BAG: a Stability-Aware Framework for SHAP-based
+Brain Age Gap Decomposition"*.
+
+**Paper:** [placeholder](...)
+
+## Abstract
+
+Brain age modelling estimates chronological age from neuroimaging features, and the brain age gap between predicted and
+chronological age is used as a marker of atypical brain aging. SHapley Additive exPlanations (SHAP) attributions are widely applied to identify the regions that drive a subject's gap, but the attributions depend on the background set against which they are computed, a component that is frequently left unspecified. We show that SHAP attributions decompose the brain age
+gap only when the explanation baseline coincides with the subject's chronological age, and that dataset-level backgrounds violate this
+condition by anchoring the baseline to the dominant age of the training cohort. We introduce STABLE-BAG, a framework that constructs
+a subject-specific background from age-matched peers and selects, for each subject, the age window that balances baseline calibration
+against the stability of the attributions. In a controlled simulation and on the OpenBHB cohort, STABLE-BAG aligned the explanation baseline
+with chronological age and reduced the calibration gap relative to
+fixed and feature-matched backgrounds, producing attributions that remained stable across the cohort while preserving calibration wherever
+age-matched peers were sufficiently dense. Because the calibration and stability metrics are computed per subject, the framework also flags explanations that are unreliable even when the underlying age prediction is accurate.
+
+## Key features
+STABLE-BAG constructs a subject-specific SHAP background from age-matched peers
+and selects the age window that balances baseline calibration against
+attribution stability. For a subject with chronological age $y$ and predicted
+age $f(x)$, the brain age gap is:
+$$
+BAG = f(x) - y.
+$$
+
+SHAP provides the additive decomposition:
+
+$$
+\sum_i \phi_i = f(x) - \phi_0,
+$$
+
+where $\phi_0$ is the background-dependent expected value. STABLE-BAG aims to
+calibrate $\phi_0$ to the subject's chronological age, so that the sum of the
+feature attributions represents the subject's BAG. 
+
+## Repository structure
+
+```text
+stable_bag/
+├── data/
+│   ├── df_train.xlsx          # training pool
+│   ├── df_test.xlsx           # test set
+│   └── model.keras             # pre-trained Keras brain-age model
+├── core.py                    # shared background and bootstrap-SHAP utilities
+├── 01_split_data.py           # split training pool into background and validation
+├── 02_select_lambda.py        # select lambda via validation Pareto analysis
+├── 03_run_test.py             # run STABLE-BAG on the test set
+├── 04_ablation_background.py  # compare alternative background strategies
+├── tools/
+│   └── status.py              # inspect validation and test checkpoints
+├── requirements.txt
+├── LICENSE.txt
+└── README.md
+```
+
+The validation and test checkpoints, tabular results, Parquet attributions and
+ablation figures are generated in `results/` at runtime. This directory is not
+included in the repository.
+
+## Installation
+
+The implementation is written in Python and uses TensorFlow/Keras, SHAP,
+NumPy, pandas, scikit-learn, matplotlib, openpyxl and pyarrow. Python versions
+from 3.9 through 3.13 are suitable within the declared project range.
+
+Create an environment and install the dependencies:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+The pipeline can also be run without
+a GPU by setting:
+
+```bash
+export CUDA_VISIBLE_DEVICES=-1
+```
+
+## Dataset
+
+The experiments use morphometric brain features and chronological age. The
+data used in this work were derived from the [OpenBHB
+dataset](https://baobablab.github.io/bhb/dataset), which is openly available to
+researchers upon request.
+
+Morphometric features were extracted from each MRI scan using FreeSurfer's
+`recon-all` pipeline, including intensity normalisation, skull stripping,
+gray- and white-matter segmentation, cortical surface reconstruction and
+registration to the `fsaverage` template. Cortical parcellation follows the
+Destrieux atlas, which defines 148 regions of interest across the two
+hemispheres. OpenBHB provides seven ROI-wise descriptors: gray-matter volume,
+mean cortical thickness, cortical-thickness standard deviation, surface area,
+integrated mean curvature, integrated Gaussian curvature and intrinsic
+curvature index. We retained gray-matter volume, mean cortical thickness and
+surface area, resulting in $3 \times 148 = 444$ features per subject. The four
+curvature- and dispersion-based descriptors were excluded a priori because of
+their weaker direct clinical interpretability for brain-age analyses.
+
+Before being used in the experiments, gray-matter volume for each ROI was
+adjusted for inter-subject variability in intracranial volume (ICV) through
+training-set residualisation:
+
+$$
+V_{norm} = V_{raw} - \beta\left(ICV - \overline{ICV}\right),
+$$
+
+where $\beta$ is the regression coefficient of raw ROI volume on ICV estimated
+on the training set, and $\overline{ICV}$ is the mean training-set ICV.
+Each feature was then standardised using a z-score, with the per-feature mean
+and standard deviation estimated exclusively on the training set. The same
+statistics were applied unchanged to the test data to prevent information
+leakage. 
+
+The repository contains the two data files needed by the pipeline:
+
+- `data/df_train.xlsx`: training pool used to create the validation/background
+	split and, later, as the full SHAP background pool for testing;
+- `data/df_test.xlsx`: held-out test set.
+
+Both files are already pre-processed following the previous steps; no additional
+normalisation is performed by the pipeline. Each file is expected to contain `participant_id`, the morphometric feature
+columns, and `age`. The code uses the columns before `age` as model features;
+`age` is therefore expected to be the last column. The supplied model expects
+444 input features and returns one predicted age per subject.
+
+
+## Run the experiments
+
+Run the scripts from the repository root in the following order:
+
+```bash
+python 01_split_data.py
+python 02_select_lambda.py
+python 03_run_test.py
+python 04_ablation_background.py
+```
+
+### Step 1: split the training pool
+
+`01_split_data.py` performs an 80/20 random split of `df_train.xlsx` using
+`random_state=42`. It writes:
+
+- `data/df_background.xlsx`, used for validation-time age-matched backgrounds;
+- `data/df_val.xlsx`, used to select the global regularisation parameter.
+
+
+### Step 2: select the stability weight
+
+For each validation subject $(x,y)$, `02_select_lambda.py` constructs an
+age-matched background for every candidate half-width $\delta$:
+
+$$
+B_y^\delta = \{x_j \in X_{pool}: |y_j-y| \leq \delta\}.
+$$
+
+Here, the **window** is the age interval $[y-\delta,y+\delta]$ around the
+subject's chronological age. The candidate half-widths are
+`[2, 3, 5, 7, 10, 15, 20]` years. For each window, the script runs 10 bootstrap
+KernelSHAP computations and estimates the calibration gap and attribution
+stability. The calibration term measures how close the SHAP baseline
+$\phi_0$ is to the subject's age, $|\phi_0-y|$, while stability is the mean
+per-feature standard deviation across bootstrap attributions.
+
+For a candidate trade-off weight $\lambda$, the window selected for each
+subject is the one minimising:
+
+$$
+\delta^*(x,y;\lambda) = \arg\min_{\delta \in \Delta}
+\left[|\phi_0(B_y^\delta)-y| + \lambda\,s(x;B_y^\delta)\right],
+$$
+
+where $\Delta=\{2,3,5,7,10,15,20\}$ and $s$ denotes stability. The
+**lambda** parameter controls the calibration--stability trade-off: small
+values favour a better-calibrated baseline, whereas large values favour more
+stable explanations. Since both terms are measured in years, $\lambda$ is
+dimensionless. It is a cohort-level parameter and is not changed between
+subjects in the test set.
+
+The script evaluates the candidate values
+`[0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0, 5.0, 10.0]`. For each
+candidate, it aggregates the calibration and stability obtained after the
+subject-specific window selection, producing one point on the
+calibration-stability frontier. **lambda_star** ($\lambda^*$) is the single
+global value selected as the point closest to the origin after normalising the
+mean calibration and mean instability across the candidate values. The same
+$\lambda^*$ is then fixed and used for every test subject in Step 3.
+
+The script writes `results/pareto_points.csv` and
+`results/lambda_star.json`, and maintains
+`results/validation_intermediate.pkl` as a resumable checkpoint.
+
+### Step 3: run the test analysis
+
+`03_run_test.py` fixes $\lambda^*$, uses the complete training pool as the
+background pool, and evaluates the held-out test subjects. Subjects for which
+all candidate windows fail the local-accuracy sanity check are marked as
+`skipped`.
+
+The script writes:
+
+- `results/test_results.csv`, with one summary row per test subject;
+- `results/test_shap_long.parquet`, containing `id`, `feature` and `shap_value`;
+- `results/test_checkpoint.pkl`, which allows the computation to resume.
+
+### Step 4: ablate the background strategy
+
+`04_ablation_background.py` compares STABLE-BAG with two fixed-size alternatives
+using 10 neighbours:
+
+- `kNN-feature`: nearest neighbours by Euclidean distance in feature space;
+- `kNN-age`: nearest neighbours by chronological-age distance.
+
+It writes `results/ablation_backgrounds.csv` and, when the STABLE-BAG test
+results are available, the following figures under `results/figures/`:
+
+- `fig_ablation_calibration.png`;
+- `fig_ablation_diagonality.png`;
+- `fig_ablation_age_range.png`.
+
+The ablation script also accepts the optional environment variables
+`STABLE_BAG_DATA` and `STABLE_BAG_RESULTS` to specify alternative data and
+results directories.
+
+### Monitoring and resume
+
+The validation and test analyses can be resumed after interruption by rerunning
+the corresponding script. Progress can be inspected with:
+
+```bash
+python tools/status.py
+```
+
+The SHAP computations are computationally intensive because each subject is
+evaluated over multiple age windows and bootstrap repetitions. Runtime depends
+on the available CPU, GPU and TensorFlow/SHAP configuration.
+
+## Citation
+
+The citation information will be updated after publication:
+
+```bibtex
+@article{Lombardi2026stablebag,
+	title   = {STABLE-BAG: a Stability-Aware Framework for SHAP-based Brain Age Gap Decomposition},
+	author  = {Lombardi, Angela and Fasano, Giuseppe and Ciuffreda, Mariangela and Colafiglio, Tommaso and Danese, Danilo and Musicco, Francesco and Di Sciascio, Eugenio and Di Noia, Tommaso},
+	journal = {Brain Informatics},
+	year    = {2026},
+	volume  = {XX},
+	number  = {XX},
+	pages   = {XX--XX},
+	doi     = {XX.XXXX/XXXXXX}
+    publisher = {Springer}
+}
+```
+
+## License
+
+Released under the [MIT License](LICENSE.txt).
