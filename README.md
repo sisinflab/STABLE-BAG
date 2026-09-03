@@ -254,7 +254,7 @@ The citation information will be updated after publication:
 	volume  = {XX},
 	number  = {XX},
 	pages   = {XX--XX},
-	doi     = {XX.XXXX/XXXXXX}
+	doi     = {XX.XXXX/XXXXXX},
     publisher = {Springer}
 }
 ```
