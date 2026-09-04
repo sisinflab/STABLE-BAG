@@ -16,12 +16,12 @@ a subject-specific background from age-matched peers and selects, for each subje
 against the stability of the attributions. In a controlled simulation and on the OpenBHB cohort, STABLE-BAG aligned the explanation baseline
 with chronological age and reduced the calibration gap relative to
 fixed and feature-matched backgrounds, producing attributions that remained stable across the cohort while preserving calibration wherever
-age-matched peers were sufficiently dense. Because the calibration and stability metrics are computed per subject, the framework also flags explanations that are unreliable even when the underlying age prediction is accurate.
+age-matched peers were sufficiently dense. Because the calibration and instability metrics are computed per subject, the framework also flags explanations that are unreliable even when the underlying age prediction is accurate.
 
 ## Key features
 STABLE-BAG constructs a subject-specific SHAP background from age-matched peers
 and selects the age window that balances baseline calibration against
-attribution stability. For a subject with chronological age $y$ and predicted
+attribution instability. For a subject with chronological age $y$ and predicted
 age $f(x)$, the brain age gap is:
 
 $$
