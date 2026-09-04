@@ -6,3 +6,4 @@ pyarrow==25.0.1
 scikit-learn==1.9.0
 shap==0.52.0
 tensorflow==2.21.0
+scipy==1.18.1
