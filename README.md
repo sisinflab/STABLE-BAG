@@ -2,9 +2,9 @@
 
 This repository contains the code and data required to reproduce the
 experiments described in *"STABLE-BAG: a Stability-Aware Framework for SHAP-based
-Brain Age Gap Decomposition"*.
+Brain Age Gap Decomposition"*  (accepted at **Brain Informatics**, Springer).
 
-**Paper:** [placeholder](...)
+**Paper:** [STABLE-BAG](https://doi.org/10.1186/s40708-026-00338-6)
 
 ## Abstract
 
@@ -324,10 +324,7 @@ The citation information will be updated after publication:
 	author  = {Lombardi, Angela and Fasano, Giuseppe and Ciuffreda, Mariangela and Colafiglio, Tommaso and Danese, Danilo and Musicco, Francesco and Di Sciascio, Eugenio and Di Noia, Tommaso},
 	journal = {Brain Informatics},
 	year    = {2026},
-	volume  = {XX},
-	number  = {XX},
-	pages   = {XX--XX},
-	doi     = {XX.XXXX/XXXXXX},
+	doi     = {https://doi.org/10.1186/s40708-026-00338-6},
     publisher = {Springer}
 }
 ```
